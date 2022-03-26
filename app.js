@@ -34,43 +34,42 @@ const initializeGame = (grid) => {
 		words: tempWords,
 	};
 };
-const edgeCheck = (grid,coordinates) => {
+const edgeCheck = (grid, coordinates) => {
 	let edgeCounter = 0;
-    if (coordinates[0] - 1 >= 0 && coordinates[0] + 1 <= 6 && coordinates[1] - 1 >= 0 && coordinates[1] + 1 <= 6) {
-        if (grid[coordinates[0] + 1][coordinates[1]] !== "_") {
-            edgeCounter++;
-        }
-        if (grid[coordinates[0] - 1][coordinates[1]] !== "_") {
-            edgeCounter++;
-        }
-        if (grid[coordinates[0]][coordinates[1] + 1] !== "_") {
-            edgeCounter++;
-        }
-        if (grid[coordinates[0]][coordinates[1] - 1] !== "_") {
-            edgeCounter++;
-        }
-    }
-    
-    if (edgeCounter >= 3) {
-        return false;
-    }
+	if (coordinates[0] - 1 >= 0 && coordinates[0] + 1 <= 6 && coordinates[1] - 1 >= 0 && coordinates[1] + 1 <= 6) {
+		if (grid[coordinates[0] + 1][coordinates[1]] !== "_") {
+			edgeCounter++;
+		}
+		if (grid[coordinates[0] - 1][coordinates[1]] !== "_") {
+			edgeCounter++;
+		}
+		if (grid[coordinates[0]][coordinates[1] + 1] !== "_") {
+			edgeCounter++;
+		}
+		if (grid[coordinates[0]][coordinates[1] - 1] !== "_") {
+			edgeCounter++;
+		}
+	}
+
+	if (edgeCounter >= 3) {
+		return false;
+	}
 	return true;
-}
+};
 const canBePlaced = (grid, word, direction, coordinates) => {
 	let wordArray = word.split("");
 	let wordLength = wordArray.length;
 	let canPlace = true;
-    
+
 	if (direction === 0) {
 		for (let i = 0; i < wordLength; i++) {
-
 			if (coordinates[1] + i + 1 >= 6) {
 				canPlace = false;
 				break;
 			}
 
-			let coord = [coordinates[0],coordinates[1] + i + 1];
-			if (!edgeCheck(grid,coord)) {
+			let coord = [coordinates[0], coordinates[1] + i + 1];
+			if (!edgeCheck(grid, coord)) {
 				canPlace = false;
 				break;
 			}
@@ -80,14 +79,14 @@ const canBePlaced = (grid, word, direction, coordinates) => {
 			}
 		}
 	} else {
-        for (let i = 0; i < wordLength; i++) {
-            if (coordinates[0] + i + 1 >= 6) {
-                canPlace = false;
+		for (let i = 0; i < wordLength; i++) {
+			if (coordinates[0] + i + 1 >= 6) {
+				canPlace = false;
 				break;
 			}
 
-			let coord = [coordinates[0] + i + 1,coordinates[1]];
-			if (!edgeCheck(grid,coord)) {
+			let coord = [coordinates[0] + i + 1, coordinates[1]];
+			if (!edgeCheck(grid, coord)) {
 				canPlace = false;
 				break;
 			}
@@ -111,7 +110,6 @@ const canBePlaced = (grid, word, direction, coordinates) => {
 			if (grid[coordinates[0] - 1][coordinates[1]] !== "_") {
 				canPlace = false;
 				return canPlace;
-
 			}
 		}
 	}
@@ -121,15 +119,14 @@ const canBePlaced = (grid, word, direction, coordinates) => {
 			coordinates.shift();
 			coordinates.shift();
 			canPlace = canBePlaced(grid, word, direction, coordinates);
-			if(!canPlace) {
+			if (!canPlace) {
 				direction = direction === 0 ? 1 : 0;
 				canPlace = canBePlaced(grid, word, direction, coordinates);
 			}
-		} 
+		}
 	}
 	return canPlace;
 };
-
 
 const addWord = (grid, word) => {
 	let wordArray = word.split("");
@@ -194,8 +191,8 @@ const createBoard = (grid, words) => {
 };
 
 let generatedBoards = [];
-
-while (generatedBoards.length < 10) {
+let boardGenerationLimit = 0;
+while (generatedBoards.length < 10 && boardGenerationLimit < 200) {
 	let grid = gridMatrix();
 	game = initializeGame(grid);
 	let board = createBoard(game.grid, game.words);
@@ -207,10 +204,20 @@ while (generatedBoards.length < 10) {
 		board = createBoard(game.grid, game.words);
 	}
 	generatedBoards.push(board.grid);
-	generatedBoards = [...new Set(generatedBoards)];
+	generatedBoards.forEach((element, index) => {
+		for (let i = 0; i < generatedBoards.length; i++) {
+			if (i !== index) {
+				if (JSON.stringify(element) === JSON.stringify(generatedBoards[i])) {
+					generatedBoards.splice(i, 1);
+				}
+			}
+		}
+	});
+	boardGenerationLimit++;
 }
-generatedBoards.forEach(element => {
-    console.table(element);
+
+generatedBoards.forEach((element) => {
+	console.table(element);
 });
 
-console.log("%cSuccessfully generated 10 unique and valid boards", "color: #00ff00");
+console.log(`Successfully generated ${generatedBoards.length} unique and valid boards`, "in", boardGenerationLimit, "attempts");
