@@ -34,13 +34,9 @@ const initializeGame = (grid) => {
 		words: tempWords,
 	};
 };
-
-const canBePlaced = (grid, word, direction, coordinates) => {
-	let wordArray = word.split("");
-	let wordLength = wordArray.length;
-	let canPlace = true;
-    let edgeCounter = 0;
-    if (coordinates[0] - 1 >= 0 && coordinates[0] + 1 <= 7 && coordinates[1] - 1 >= 0 && coordinates[1] + 1 <= 7) {
+const edgeCheck = (grid,coordinates) => {
+	let edgeCounter = 0;
+    if (coordinates[0] - 1 >= 0 && coordinates[0] + 1 <= 6 && coordinates[1] - 1 >= 0 && coordinates[1] + 1 <= 6) {
         if (grid[coordinates[0] + 1][coordinates[1]] !== "_") {
             edgeCounter++;
         }
@@ -56,26 +52,48 @@ const canBePlaced = (grid, word, direction, coordinates) => {
     }
     
     if (edgeCounter >= 3) {
-        canPlace = false;
+        return false;
     }
+	return true;
+}
+const canBePlaced = (grid, word, direction, coordinates) => {
+	let wordArray = word.split("");
+	let wordLength = wordArray.length;
+	let canPlace = true;
+    
 	if (direction === 0) {
 		for (let i = 0; i < wordLength; i++) {
-			if (coordinates[1] + i + 1 >= 7) {
+
+			if (coordinates[1] + i + 1 >= 6) {
+				canPlace = false;
+				break;
+			}
+
+			let coord = [coordinates[0],coordinates[1] + i + 1];
+			if (!edgeCheck(grid,coord)) {
 				canPlace = false;
 				break;
 			}
 			if (grid[coordinates[0]][coordinates[1] + i + 1] !== "_") {
 				canPlace = false;
+				break;
 			}
 		}
 	} else {
         for (let i = 0; i < wordLength; i++) {
-            if (coordinates[0] + i + 1 >= 7) {
+            if (coordinates[0] + i + 1 >= 6) {
                 canPlace = false;
+				break;
+			}
+
+			let coord = [coordinates[0] + i + 1,coordinates[1]];
+			if (!edgeCheck(grid,coord)) {
+				canPlace = false;
 				break;
 			}
 			if (grid[coordinates[0] + i + 1][coordinates[1]] !== "_") {
 				canPlace = false;
+				break;
 			}
 		}
 	}
@@ -85,12 +103,15 @@ const canBePlaced = (grid, word, direction, coordinates) => {
 		if (coordinates[1] - 1 >= 0) {
 			if (grid[coordinates[0]][coordinates[1] - 1] !== "_") {
 				canPlace = false;
+				return canPlace;
 			}
 		}
 	} else {
 		if (coordinates[0] - 1 >= 0) {
 			if (grid[coordinates[0] - 1][coordinates[1]] !== "_") {
 				canPlace = false;
+				return canPlace;
+
 			}
 		}
 	}
@@ -100,10 +121,15 @@ const canBePlaced = (grid, word, direction, coordinates) => {
 			coordinates.shift();
 			coordinates.shift();
 			canPlace = canBePlaced(grid, word, direction, coordinates);
-		}
+			if(!canPlace) {
+				direction = direction === 0 ? 1 : 0;
+				canPlace = canBePlaced(grid, word, direction, coordinates);
+			}
+		} 
 	}
 	return canPlace;
 };
+
 
 const addWord = (grid, word) => {
 	let wordArray = word.split("");
@@ -151,7 +177,7 @@ const createBoard = (grid, words) => {
 	}
 	let failedWords = [];
 	let retry = 0;
-	while (failedIndex.length > 0 && retry < 1000) {
+	while (failedIndex.length > 0 && retry < 100) {
 		let index = failedIndex.pop();
 		let isFailed = addWord(grid, words[index]);
 		if (isFailed == false) {
