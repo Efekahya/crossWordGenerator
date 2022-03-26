@@ -213,4 +213,4 @@ generatedBoards.forEach(element => {
     console.table(element);
 });
 
-console.log('%c Successfully generated 10 unique and valid boards', 'color: #00ff00')
+console.log("%cSuccessfully generated 10 unique and valid boards", "color: #00ff00");
